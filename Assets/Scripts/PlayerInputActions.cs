@@ -114,7 +114,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": ""TouchPosition"",
-                    ""type"": ""Value"",
+                    ""type"": ""PassThrough"",
                     ""id"": ""cd6c6d35-d29a-4b9c-8826-5ea7dc873003"",
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
@@ -237,7 +237,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""92bc8057-ce6b-4d1d-843e-7235db61ad04"",
-                    ""path"": ""<Touchscreen>/primaryTouch/indirectTouch"",
+                    ""path"": ""<Touchscreen>/primaryTouch/press"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",

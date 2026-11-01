@@ -18,9 +18,16 @@ public class Player : MonoBehaviour, ITeleportable {
     private Vector2 currentDirection;
     private Vector2 queuedDirection;
     private bool isWalking;
+    private ContactFilter2D obstacleFilter;
+
+    private readonly RaycastHit2D[] hitBuffer = new RaycastHit2D[1];
 
     private void Awake() {
         Instance = this;
+
+        obstacleFilter = new ContactFilter2D();
+        obstacleFilter.SetLayerMask(obstaclesLayerMask);
+        obstacleFilter.useTriggers = false;
     }
 
     private void Update() { 
@@ -70,8 +77,10 @@ public class Player : MonoBehaviour, ITeleportable {
     }
 
     private bool CanMove(Vector2 direction, float distance) {
-        return !Physics2D.BoxCast(transform.position, BOX_SIZE, 0f, direction, distance,
-            obstaclesLayerMask);
+        int hitCount = Physics2D.BoxCast(transform.position, BOX_SIZE, 0f, direction, obstacleFilter, hitBuffer,
+            distance);
+
+        return hitCount == 0;
     }
 
     public bool GetPlayerIsWalking() {
