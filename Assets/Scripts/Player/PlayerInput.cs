@@ -1,11 +1,12 @@
 using UnityEngine;
+using Touchscreen = UnityEngine.InputSystem.Touchscreen;
 
 [DefaultExecutionOrder(-100)]
 public class PlayerInput : MonoBehaviour {
     
     public static PlayerInput Instance { get; private set; }
     
-    [SerializeField, Range(0.01f, 0.3f)] private float swipeThresholdPercent = 0.06f;
+    [SerializeField, Range(0.01f, 0.3f)] private float swipeThresholdPercent = 0.035f;
     
     private readonly SwipeDetector swipeDetector = new SwipeDetector();
 
@@ -37,18 +38,30 @@ public class PlayerInput : MonoBehaviour {
         var touchPress = playerInputActions.Player.TouchPress;
         var touchPosition = playerInputActions.Player.TouchPosition;
 
+        float thresholdPixels = GetSwipeThresholdPixels();
+        Vector2 currentPosition = touchPosition.ReadValue<Vector2>();
+
         if (touchPress.WasPressedThisFrame()) {
-            swipeDetector.Begin(touchPosition.ReadValue<Vector2>());
+            swipeDetector.Begin(ResolveTouchStartPosition(currentPosition));
         }
 
-        if (touchPress.IsPressed() && swipeDetector.TryToDetectSwipe(touchPosition.ReadValue<Vector2>(),
-                GetSwipeThresholdPixels(), out Vector2 detectedDirection)) {
-            swipeDirection = detectedDirection;
+        if (touchPress.IsPressed() &&
+            swipeDetector.TryToDetectSwipe(currentPosition, thresholdPixels, out Vector2 draggedDirection)) {
+            swipeDirection = draggedDirection;
         }
+        
+        if (touchPress.WasReleasedThisFrame() &&
+            swipeDetector.End(currentPosition, thresholdPixels, out Vector2 flickDirection)) {
+            swipeDirection = flickDirection;
+        }
+    }
+    
+    private static Vector2 ResolveTouchStartPosition(Vector2 fallbackPosition) {
+        Touchscreen touchscreen = Touchscreen.current;
+        if (touchscreen == null) return fallbackPosition;
 
-        if (touchPress.WasReleasedThisFrame()) {
-            swipeDetector.End();
-        }
+        Vector2 startPosition = touchscreen.primaryTouch.startPosition.ReadValue();
+        return startPosition == Vector2.zero ? fallbackPosition : startPosition;
     }
 
     private float GetSwipeThresholdPixels() {
