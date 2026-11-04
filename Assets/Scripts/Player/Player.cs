@@ -11,7 +11,7 @@ public class Player : MonoBehaviour, ITeleportable {
 
     public event EventHandler OnWalkingChanged;
 
-    [SerializeField] private float movementSpeed = 15f;
+    [SerializeField] private float movementSpeed = 11.39f;
     [SerializeField] private PlayerInput playerInput;
     [SerializeField] private LayerMask obstaclesLayerMask;
 
@@ -19,6 +19,7 @@ public class Player : MonoBehaviour, ITeleportable {
     private Vector2 queuedDirection;
     private bool isWalking;
     private ContactFilter2D obstacleFilter;
+    private float speedMultiplier = 1f;
 
     private readonly RaycastHit2D[] hitBuffer = new RaycastHit2D[1];
 
@@ -41,7 +42,7 @@ public class Player : MonoBehaviour, ITeleportable {
             queuedDirection = movementDirection;
         }
 
-        float movementDistance = movementSpeed * Time.deltaTime;
+        float movementDistance = movementSpeed * speedMultiplier * Time.deltaTime;
 
         if (queuedDirection != Vector2.zero && CanMove(queuedDirection, movementDistance)) {
             SetCurrentDirection(queuedDirection);
@@ -81,6 +82,10 @@ public class Player : MonoBehaviour, ITeleportable {
             distance);
 
         return hitCount == 0;
+    }
+
+    public void SetSpeedMultiplier(float multiplier) {
+        speedMultiplier = Mathf.Max(0f, multiplier);
     }
 
     public bool GetPlayerIsWalking() {
