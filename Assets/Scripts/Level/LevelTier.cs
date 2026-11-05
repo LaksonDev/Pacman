@@ -2,12 +2,14 @@ using System;
 using UnityEngine;
 
 [Serializable]
-public class LevelTier : MonoBehaviour {
+public struct LevelTier {
 
-    [SerializeField, Min(1)] private int fromLevel;
-    [SerializeField, Range(0f, 200f)] private float pacmanNormalSpeedPercent;
+    private const float MAX_SPEED_PERFNT = 100f;
+    
+    [SerializeField, Min(1)] private byte fromLevel;
+    [SerializeField, Range(0f, MAX_SPEED_PERFNT)] private float pacmanNormalSpeedPercent;
 
-    public int GetFromLevel() {
+    public byte GetFromLevel() {
         return fromLevel;
     }
 

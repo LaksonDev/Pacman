@@ -9,9 +9,9 @@ public class GameManager : MonoBehaviour {
     public event EventHandler OnLevelChanged;
 
     [SerializeField] private LevelTableSO levelTableSO;
-    [SerializeField, Min(1)] private int startingLevel;
+    [SerializeField, Min(1)] private byte startingLevel;
 
-    private int currentLevel;
+    private byte currentLevel;
     private LevelTier currentTier;
 
     private void Awake() {

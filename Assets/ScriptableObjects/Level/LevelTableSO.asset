@@ -13,7 +13,11 @@ MonoBehaviour:
   m_Name: LevelTableSO
   m_EditorClassIdentifier: Assembly-CSharp::LevelTableSO
   levelTiers:
-  - {fileID: 2532444548202371160, guid: c5624ead16a83264babe5201979cbc04, type: 3}
-  - {fileID: 2180955351361282582, guid: 5f662a0211861d3448c40e5623d585b7, type: 3}
-  - {fileID: 2346168823536072745, guid: 0d4f700c275655048b163df6d683cfad, type: 3}
-  - {fileID: 4379327272474660814, guid: 5839636bd380c5b4d97fed87776a5ae1, type: 3}
+  - fromLevel: 1
+    pacmanNormalSpeedPercent: 80
+  - fromLevel: 2
+    pacmanNormalSpeedPercent: 90
+  - fromLevel: 5
+    pacmanNormalSpeedPercent: 100
+  - fromLevel: 21
+    pacmanNormalSpeedPercent: 90

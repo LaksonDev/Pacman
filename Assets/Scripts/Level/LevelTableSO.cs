@@ -5,7 +5,7 @@ public class LevelTableSO : ScriptableObject {
 
     [SerializeField] private LevelTier[] levelTiers;
 
-    public LevelTier GetTierFromLevel(int level) {
+    public LevelTier GetTierFromLevel(byte level) {
         bool found = false;
         LevelTier best = default;
 
