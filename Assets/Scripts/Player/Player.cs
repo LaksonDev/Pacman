@@ -11,7 +11,7 @@ public class Player : MonoBehaviour, ITeleportable {
 
     public event EventHandler OnWalkingChanged;
 
-    [SerializeField] private float movementSpeed = 11.39f;
+    [SerializeField] private float movementSpeed = 15f;
     [SerializeField] private PlayerInput playerInput;
     [SerializeField] private LayerMask obstaclesLayerMask;
 

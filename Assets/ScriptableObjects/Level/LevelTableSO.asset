@@ -15,9 +15,13 @@ MonoBehaviour:
   levelTiers:
   - fromLevel: 1
     pacmanNormalSpeedPercent: 80
+    pacmanEatingDotsSpeedPercent: 71
   - fromLevel: 2
     pacmanNormalSpeedPercent: 90
+    pacmanEatingDotsSpeedPercent: 79
   - fromLevel: 5
     pacmanNormalSpeedPercent: 100
+    pacmanEatingDotsSpeedPercent: 87
   - fromLevel: 21
     pacmanNormalSpeedPercent: 90
+    pacmanEatingDotsSpeedPercent: 79

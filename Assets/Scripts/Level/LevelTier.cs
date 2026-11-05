@@ -8,12 +8,21 @@ public struct LevelTier {
     
     [SerializeField, Min(1)] private byte fromLevel;
     [SerializeField, Range(0f, MAX_SPEED_PERFNT)] private float pacmanNormalSpeedPercent;
+    [SerializeField, Range(0f, MAX_SPEED_PERFNT)] private float pacmanEatingDotsSpeedPercent;
 
     public byte GetFromLevel() {
         return fromLevel;
     }
 
     public float GetPacmanNormalSpeedMultiplier() {
-        return pacmanNormalSpeedPercent / 100f;
+        return PercentToMultiplier(pacmanNormalSpeedPercent);
+    }
+
+    public float GetPacmanEatingDotsSpeedMultiplier() {
+        return PercentToMultiplier(pacmanEatingDotsSpeedPercent);
+    }
+
+    private static float PercentToMultiplier(float percent) {
+        return percent / 100f;
     }
 }

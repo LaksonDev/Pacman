@@ -9,7 +9,7 @@ public class GameManager : MonoBehaviour {
     public event EventHandler OnLevelChanged;
 
     [SerializeField] private LevelTableSO levelTableSO;
-    [SerializeField, Min(1)] private byte startingLevel;
+    [SerializeField] private byte startingLevel;
 
     private byte currentLevel;
     private LevelTier currentTier;
@@ -34,7 +34,7 @@ public class GameManager : MonoBehaviour {
         OnLevelChanged?.Invoke(this,EventArgs.Empty);
     }
 
-    public int GetCurrentLevel() {
+    public byte GetCurrentLevel() {
         return currentLevel;
     }
 
