@@ -6,11 +6,11 @@ public struct LevelTier {
 
     private const float MAX_SPEED_PERFNT = 100f;
     
-    [SerializeField, Min(1)] private byte fromLevel;
+    [SerializeField, Min(1)] private int fromLevel;
     [SerializeField, Range(0f, MAX_SPEED_PERFNT)] private float pacmanNormalSpeedPercent;
     [SerializeField, Range(0f, MAX_SPEED_PERFNT)] private float pacmanEatingDotsSpeedPercent;
 
-    public byte GetFromLevel() {
+    public int GetFromLevel() {
         return fromLevel;
     }
 
