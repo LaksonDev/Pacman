@@ -3804,6 +3804,7 @@ GameObject:
   - component: {fileID: 4109320333556657543}
   - component: {fileID: 8406783040207739684}
   - component: {fileID: 5742952023242084116}
+  - component: {fileID: 913358856502984068}
   m_Layer: 9
   m_Name: Tilemap_Walls
   m_TagString: Untagged
@@ -9785,7 +9786,7 @@ TilemapRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: db5befc3476bca045ad295822010f5f8, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -10371,6 +10372,20 @@ CompositeCollider2D:
   m_OffsetDistance: 0.00005
   m_UseDelaunayMesh: 0
   m_CompositeGameObject: {fileID: 8261768575638462569}
+--- !u!114 &913358856502984068
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8261768575638462569}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05be12ad5ccc58c49824e3792b7ed35e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WallsFlashVisual
+  tilemapRenderer: {fileID: 0}
+  flashInterval: 0.25
 --- !u!1 &8967973030011278286
 GameObject:
   m_ObjectHideFlags: 0
