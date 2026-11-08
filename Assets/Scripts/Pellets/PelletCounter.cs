@@ -21,11 +21,9 @@ public class PelletCounter : MonoBehaviour {
         if (remainingPellets <= 0) return;
 
         remainingPellets--;
-        Debug.Log($"Remaining pellets: {remainingPellets}"); // temporary
 
         if (remainingPellets == 0) {
-            Debug.Log("ALL PELLETS EATEN");
-            OnAllPelletsEaten?.Invoke(this,EventArgs.Empty);
+            OnAllPelletsEaten?.Invoke(this, EventArgs.Empty);
         }
     }
 
