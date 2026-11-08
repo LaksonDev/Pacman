@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9aed96f5e77b4f468555770548836aa, type: 3}
+  m_Name: LevelTableSO
+  m_EditorClassIdentifier: Assembly-CSharp::LevelTableSO
+  levelTiers:
+  - fromLevel: 1
+    pacmanNormalSpeedPercent: 80
+    pacmanEatingDotsSpeedPercent: 75
+  - fromLevel: 2
+    pacmanNormalSpeedPercent: 85
+    pacmanEatingDotsSpeedPercent: 80
+  - fromLevel: 3
+    pacmanNormalSpeedPercent: 90
+    pacmanEatingDotsSpeedPercent: 85
+  - fromLevel: 4
+    pacmanNormalSpeedPercent: 95
+    pacmanEatingDotsSpeedPercent: 90
+  - fromLevel: 5
+    pacmanNormalSpeedPercent: 100
+    pacmanEatingDotsSpeedPercent: 95

@@ -18,7 +18,9 @@ public class Player : MonoBehaviour, ITeleportable {
     private Vector2 currentDirection;
     private Vector2 queuedDirection;
     private bool isWalking;
+    private bool isMovementLocked;
     private ContactFilter2D obstacleFilter;
+    private float speedMultiplier = 1f;
 
     private readonly RaycastHit2D[] hitBuffer = new RaycastHit2D[1];
 
@@ -30,7 +32,32 @@ public class Player : MonoBehaviour, ITeleportable {
         obstacleFilter.useTriggers = false;
     }
 
+    private void OnEnable() {
+        LevelManager.Instance.OnLevelCompleted += LevelManager_OnLevelCompleted;
+        LevelManager.Instance.OnLevelLoaded += LevelManager_OnLevelLoaded;
+    }
+
+    private void OnDisable() {
+        if (LevelManager.Instance == null) return;
+
+        LevelManager.Instance.OnLevelCompleted -= LevelManager_OnLevelCompleted;
+        LevelManager.Instance.OnLevelLoaded -= LevelManager_OnLevelLoaded;
+    }
+
+    private void LevelManager_OnLevelLoaded(object sender, LevelManager.OnLevelLoadedEventArgs e) {
+        TeleportTo(e.GetLevel().GetPlayerSpawnPosition());
+        ResetState();
+    }
+
+    private void LevelManager_OnLevelCompleted(object sender, LevelManager.OnLevelCompletedEventArgs e) {
+        isMovementLocked = true;
+        
+        SetWalking(false);
+    }
+
     private void Update() { 
+        if (isMovementLocked) return;
+        
         HandleMovement();
     }
 
@@ -41,7 +68,7 @@ public class Player : MonoBehaviour, ITeleportable {
             queuedDirection = movementDirection;
         }
 
-        float movementDistance = movementSpeed * Time.deltaTime;
+        float movementDistance = movementSpeed * speedMultiplier * Time.deltaTime;
 
         if (queuedDirection != Vector2.zero && CanMove(queuedDirection, movementDistance)) {
             SetCurrentDirection(queuedDirection);
@@ -55,6 +82,16 @@ public class Player : MonoBehaviour, ITeleportable {
         }
         
         SetWalking(hasMoved);
+    }
+
+    private void ResetState() {
+        currentDirection = Vector2.zero;
+        queuedDirection = Vector2.zero;
+
+        transform.rotation = Quaternion.identity;
+
+        isMovementLocked = false;
+        SetWalking(false);
     }
 
     private void SetCurrentDirection(Vector2 direction) {
@@ -81,6 +118,10 @@ public class Player : MonoBehaviour, ITeleportable {
             distance);
 
         return hitCount == 0;
+    }
+
+    public void SetSpeedMultiplier(float multiplier) {
+        speedMultiplier = Mathf.Max(0f, multiplier);
     }
 
     public bool GetPlayerIsWalking() {
