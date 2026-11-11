@@ -53,11 +53,7 @@ public class LevelManager : MonoBehaviour {
     }
 
     private void Start() {
-        if (isTransitioning) return;
-        isTransitioning = true;
-        
-        OnLevelCompleted?.Invoke(this, new OnLevelCompletedEventArgs(currentLevelNumber));
-        StartCoroutine(LoadNextLevelRoutine());
+        LoadLevel(startingLevelNumber);
     }
 
     private IEnumerator LoadNextLevelRoutine() {
