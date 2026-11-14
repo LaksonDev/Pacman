@@ -85,20 +85,32 @@ public class Ghost : MonoBehaviour, ITeleportable {
     }
 
     private void ChooseDirection() {
-        int candidateCount = 0;
+        Vector2 chaseTarget = GetChaseTarget();
 
+        Vector2 bestDirection = Vector2.zero;
+        float bestDistance = float.MaxValue;
+        
         foreach (Vector2 direction in DIRECTIONS) {
             if (direction == -currentDirection) continue; 
             if (!CanMove(direction)) continue;
 
-            candidateBuffer[candidateCount++] = direction;
+            Vector2 nextCell = (Vector2)transform.position + direction * CELL_SIZE;
+            float distance = (chaseTarget - nextCell).sqrMagnitude;
+
+            if (distance >= bestDistance) continue;
+
+            bestDistance = distance;
+            bestDirection = direction;
         }
 
-        currentDirection = candidateCount > 0
-            ? candidateBuffer[Random.Range(0, candidateCount)]
-            : -currentDirection;
-
+        currentDirection = bestDirection != Vector2.zero ? bestDirection : -currentDirection;
         targetPosition = (Vector2)transform.position + currentDirection * CELL_SIZE;
+    }
+
+    private Vector2 GetChaseTarget() {
+        if (Player.Instance == null) return transform.position;
+
+        return SnapToCellCenter(Player.Instance.transform.position);
     }
 
     private bool CanMove(Vector2 direction) {
