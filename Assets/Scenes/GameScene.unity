@@ -314,7 +314,7 @@ MonoBehaviour:
     m_Bits: 512
   nodesLayerMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 1024
 --- !u!58 &286521707
 CircleCollider2D:
   m_ObjectHideFlags: 0

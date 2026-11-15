@@ -1,7 +1,10 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
 public class Ghost : MonoBehaviour, ITeleportable {
+
+    public event EventHandler OnDirectionChanged;
 
     private static readonly Vector2 BOX_SIZE = new Vector2(.8f, .8f);
     private static readonly Vector2[] DIRECTIONS = { Vector2.up, Vector2.left, Vector2.down, Vector2.right };
@@ -20,7 +23,6 @@ public class Ghost : MonoBehaviour, ITeleportable {
 
     private readonly RaycastHit2D[] hitBuffer = new RaycastHit2D[1];
     private readonly Collider2D[] nodeBuffer = new Collider2D[1];
-    private readonly Vector2[] candidateBuffer = new Vector2[4];
 
     private void Awake() {
         obstacleFilter = new ContactFilter2D();
@@ -43,7 +45,7 @@ public class Ghost : MonoBehaviour, ITeleportable {
     }
 
     private void LevelManager_OnLevelLoaded(object sender, LevelManager.OnLevelLoadedEventArgs e) {
-        currentDirection = Vector2.zero;
+        SetCurrentDirection(Vector2.zero);
         TeleportTo(e.GetLevel().GetGhostSpawnPosition(0));
         StartCoroutine(StartMovingRoutine());
     }
@@ -72,6 +74,13 @@ public class Ghost : MonoBehaviour, ITeleportable {
             OnCellCenterReached();
         }
     }
+    
+    private void SetCurrentDirection(Vector2 direction) {
+        if (currentDirection == direction) return;
+
+        currentDirection = direction;
+        OnDirectionChanged?.Invoke(this, EventArgs.Empty);
+    }
 
     private void OnCellCenterReached() {
         bool isNode = Physics2D.OverlapPoint(transform.position, nodeFilter, nodeBuffer) > 0;
@@ -89,9 +98,9 @@ public class Ghost : MonoBehaviour, ITeleportable {
 
         Vector2 bestDirection = Vector2.zero;
         float bestDistance = float.MaxValue;
-        
+
         foreach (Vector2 direction in DIRECTIONS) {
-            if (direction == -currentDirection) continue; 
+            if (direction == -currentDirection) continue;
             if (!CanMove(direction)) continue;
 
             Vector2 nextCell = (Vector2)transform.position + direction * CELL_SIZE;
@@ -103,7 +112,7 @@ public class Ghost : MonoBehaviour, ITeleportable {
             bestDirection = direction;
         }
 
-        currentDirection = bestDirection != Vector2.zero ? bestDirection : -currentDirection;
+        SetCurrentDirection(bestDirection != Vector2.zero ? bestDirection : -currentDirection);
         targetPosition = (Vector2)transform.position + currentDirection * CELL_SIZE;
     }
 
@@ -134,5 +143,9 @@ public class Ghost : MonoBehaviour, ITeleportable {
 
         SetPosition(center);
         targetPosition = center;
+    }
+    
+    public Vector2 GetCurrentDirection() {
+        return currentDirection;
     }
 }
