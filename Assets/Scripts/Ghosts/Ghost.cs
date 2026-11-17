@@ -13,11 +13,13 @@ public class Ghost : MonoBehaviour, ITeleportable {
     private const float MAX_FRAME_TIME = 0.05f;
 
     [SerializeField] private float movementSpeed = 11f;
+    [SerializeField] private Vector2 scatterTarget = new Vector2(12.5f, 12.5f);
     [SerializeField] private LayerMask obstaclesLayerMask;
     [SerializeField] private LayerMask nodesLayerMask;
 
     private Vector2 currentDirection;
     private Vector2 targetPosition;
+    private bool isReverseRequested;
     private ContactFilter2D obstacleFilter;
     private ContactFilter2D nodeFilter;
 
@@ -36,18 +38,28 @@ public class Ghost : MonoBehaviour, ITeleportable {
 
     private void OnEnable() {
         LevelManager.Instance.OnLevelLoaded += LevelManager_OnLevelLoaded;
+        GhostModeScheduler.Instance.OnModeChanged += GhostModeScheduler_OnModeChanged;
     }
 
     private void OnDisable() {
-        if (LevelManager.Instance == null) return;
+        if (LevelManager.Instance != null) {
+            LevelManager.Instance.OnLevelLoaded -= LevelManager_OnLevelLoaded;
+        }
 
-        LevelManager.Instance.OnLevelLoaded -= LevelManager_OnLevelLoaded;
+        if (GhostModeScheduler.Instance != null) {
+            GhostModeScheduler.Instance.OnModeChanged -= GhostModeScheduler_OnModeChanged;
+        }
     }
 
     private void LevelManager_OnLevelLoaded(object sender, LevelManager.OnLevelLoadedEventArgs e) {
+        isReverseRequested = false;
         SetCurrentDirection(Vector2.zero);
         TeleportTo(e.GetLevel().GetGhostSpawnPosition(0));
         StartCoroutine(StartMovingRoutine());
+    }
+
+    private void GhostModeScheduler_OnModeChanged(object sender, GhostModeScheduler.OnModeChangedEventArgs e) {
+        isReverseRequested = true;
     }
 
     private IEnumerator StartMovingRoutine() {
@@ -74,7 +86,7 @@ public class Ghost : MonoBehaviour, ITeleportable {
             OnCellCenterReached();
         }
     }
-    
+
     private void SetCurrentDirection(Vector2 direction) {
         if (currentDirection == direction) return;
 
@@ -83,6 +95,13 @@ public class Ghost : MonoBehaviour, ITeleportable {
     }
 
     private void OnCellCenterReached() {
+        if (isReverseRequested) {
+            isReverseRequested = false;
+            SetCurrentDirection(-currentDirection);
+            targetPosition = (Vector2)transform.position + currentDirection * CELL_SIZE;
+            return;
+        }
+
         bool isNode = Physics2D.OverlapPoint(transform.position, nodeFilter, nodeBuffer) > 0;
 
         if (!isNode && CanMove(currentDirection)) {
@@ -94,7 +113,7 @@ public class Ghost : MonoBehaviour, ITeleportable {
     }
 
     private void ChooseDirection() {
-        Vector2 chaseTarget = GetChaseTarget();
+        Vector2 target = GetTargetPosition();
 
         Vector2 bestDirection = Vector2.zero;
         float bestDistance = float.MaxValue;
@@ -104,7 +123,7 @@ public class Ghost : MonoBehaviour, ITeleportable {
             if (!CanMove(direction)) continue;
 
             Vector2 nextCell = (Vector2)transform.position + direction * CELL_SIZE;
-            float distance = (chaseTarget - nextCell).sqrMagnitude;
+            float distance = (target - nextCell).sqrMagnitude;
 
             if (distance >= bestDistance) continue;
 
@@ -114,6 +133,12 @@ public class Ghost : MonoBehaviour, ITeleportable {
 
         SetCurrentDirection(bestDirection != Vector2.zero ? bestDirection : -currentDirection);
         targetPosition = (Vector2)transform.position + currentDirection * CELL_SIZE;
+    }
+
+    private Vector2 GetTargetPosition() {
+        bool isScatter = GhostModeScheduler.Instance.GetCurrentMode() == GhostModeScheduler.GhostMode.Scatter;
+
+        return isScatter ? SnapToCellCenter(scatterTarget) : GetChaseTarget();
     }
 
     private Vector2 GetChaseTarget() {
@@ -138,13 +163,12 @@ public class Ghost : MonoBehaviour, ITeleportable {
     }
 
     public void TeleportTo(Vector2 position) {
-
         Vector2 center = SnapToCellCenter(position);
 
         SetPosition(center);
         targetPosition = center;
     }
-    
+
     public Vector2 GetCurrentDirection() {
         return currentDirection;
     }
