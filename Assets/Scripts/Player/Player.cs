@@ -127,6 +127,10 @@ public class Player : MonoBehaviour, ITeleportable {
     public bool GetPlayerIsWalking() {
         return isWalking;
     }
+    
+    public Vector2 GetCurrentDirection() {
+        return currentDirection;
+    }
 
     public void TeleportTo(Vector2 position) {
         transform.position = new Vector3(position.x, position.y, transform.position.z);
