@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-public class Ghost : MonoBehaviour, ITeleportable {
+public abstract class BaseGhost : MonoBehaviour, ITeleportable {
 
     public event EventHandler OnDirectionChanged;
 
@@ -13,7 +13,8 @@ public class Ghost : MonoBehaviour, ITeleportable {
     private const float MAX_FRAME_TIME = 0.05f;
 
     [SerializeField] private float movementSpeed = 11f;
-    [SerializeField] private Vector2 scatterTarget = new Vector2(12.5f, 12.5f);
+    [SerializeField] private Vector2 scatterTarget;
+    [SerializeField, Min(0)] private int spawnPointIndex;
     [SerializeField] private LayerMask obstaclesLayerMask;
     [SerializeField] private LayerMask nodesLayerMask;
 
@@ -54,7 +55,7 @@ public class Ghost : MonoBehaviour, ITeleportable {
     private void LevelManager_OnLevelLoaded(object sender, LevelManager.OnLevelLoadedEventArgs e) {
         isReverseRequested = false;
         SetCurrentDirection(Vector2.zero);
-        TeleportTo(e.GetLevel().GetGhostSpawnPosition(0));
+        TeleportTo(e.GetLevel().GetGhostSpawnPosition(spawnPointIndex));
         StartCoroutine(StartMovingRoutine());
     }
 
@@ -141,10 +142,16 @@ public class Ghost : MonoBehaviour, ITeleportable {
         return isScatter ? SnapToCellCenter(scatterTarget) : GetChaseTarget();
     }
 
-    private Vector2 GetChaseTarget() {
+    protected abstract Vector2 GetChaseTarget();
+
+    protected Vector2 GetPlayerCell() {
         if (Player.Instance == null) return transform.position;
 
         return SnapToCellCenter(Player.Instance.transform.position);
+    }
+
+    protected Vector2 GetPlayerDirection() {
+        return Player.Instance == null ? Vector2.zero : Player.Instance.GetCurrentDirection();
     }
 
     private bool CanMove(Vector2 direction) {
@@ -158,7 +165,7 @@ public class Ghost : MonoBehaviour, ITeleportable {
         transform.position = new Vector3(position.x, position.y, transform.position.z);
     }
 
-    private static Vector2 SnapToCellCenter(Vector2 position) {
+    protected static Vector2 SnapToCellCenter(Vector2 position) {
         return new Vector2(Mathf.Floor(position.x) + 0.5f, Mathf.Floor(position.y) + 0.5f);
     }
 
