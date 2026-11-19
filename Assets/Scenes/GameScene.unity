@@ -414,6 +414,7 @@ MonoBehaviour:
   movementSpeed: 11
   scatterTarget: {x: 12.5, y: 12.5}
   spawnPointIndex: 0
+  startsInHouse: 0
   obstaclesLayerMask:
     serializedVersion: 2
     m_Bits: 512
@@ -1321,6 +1322,7 @@ MonoBehaviour:
   movementSpeed: 11
   scatterTarget: {x: -12.5, y: 12.5}
   spawnPointIndex: 1
+  startsInHouse: 1
   obstaclesLayerMask:
     serializedVersion: 2
     m_Bits: 512
