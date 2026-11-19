@@ -4,6 +4,11 @@ public class Level : MonoBehaviour {
 
     [SerializeField] private Transform playerSpawnPoint;
     [SerializeField] private Transform[] ghostSpawnPointArray;
+    [SerializeField] private Transform ghostHouseExitPoint;
+
+    public Vector2 GetGhostHouseExitPosition() {
+        return ghostHouseExitPoint.position;
+    }
 
     public Vector2 GetPlayerSpawnPosition() {
         return playerSpawnPoint.position;

@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class GhostVisual : MonoBehaviour {
 
-    [SerializeField] private Ghost ghost;
+    [SerializeField] private BaseGhost ghost;
     [SerializeField] private SpriteRenderer eyesRenderer;
 
     // Body
