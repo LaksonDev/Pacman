@@ -69,7 +69,6 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
 
         if (startsInHouse) {
             state = GhostState.InHouse;
-            ReleaseFromHouse();
             return;
         }
 
@@ -203,7 +202,7 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     private Vector2 GetTargetPosition() {
         bool isScatter = GhostModeScheduler.Instance.GetCurrentMode() == GhostModeScheduler.GhostMode.Scatter;
 
-        return isScatter ? SnapToCellCenter(scatterTarget) : GetChaseTarget();
+        return isScatter ? GetScatterCell() : GetChaseTarget();
     }
 
     protected abstract Vector2 GetChaseTarget();
@@ -216,6 +215,25 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
 
     protected Vector2 GetPlayerDirection() {
         return Player.Instance == null ? Vector2.zero : Player.Instance.GetCurrentDirection();
+    }
+    
+    protected Vector2 GetScatterCell() {
+        return SnapToCellCenter(scatterTarget);
+    }
+
+    protected Vector2 GetOwnCell() {
+        return SnapToCellCenter(transform.position);
+    }
+
+    protected Vector2 GetCellAheadOfPlayer(float cells, bool replicateOverflowBug) {
+        Vector2 direction = GetPlayerDirection();
+        Vector2 target = GetPlayerCell() + direction * cells;
+
+        if (replicateOverflowBug && direction == Vector2.up) {
+            target += Vector2.left * cells;
+        }
+
+        return target;
     }
 
     private bool CanMove(Vector2 direction) {
@@ -242,16 +260,5 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
 
     public Vector2 GetCurrentDirection() {
         return currentDirection;
-    }
-
-    private void OnDrawGizmosSelected() {
-        if (!Application.isPlaying || GhostModeScheduler.Instance == null) return;
-        if (state != GhostState.Normal) return; // No target while waiting in or leaving the house.
-
-        Vector2 target = GetTargetPosition();
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawLine(transform.position, target);
-        Gizmos.DrawWireSphere(target, 0.3f);
     }
 }
