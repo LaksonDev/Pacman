@@ -6,6 +6,12 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
 
     public event EventHandler OnDirectionChanged;
 
+    private enum GhostState {
+        InHouse,
+        Leaving,
+        Normal,
+    }
+
     private static readonly Vector2 BOX_SIZE = new Vector2(.8f, .8f);
     private static readonly Vector2[] DIRECTIONS = { Vector2.up, Vector2.left, Vector2.down, Vector2.right };
 
@@ -15,9 +21,12 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     [SerializeField] private float movementSpeed = 11f;
     [SerializeField] private Vector2 scatterTarget;
     [SerializeField, Min(0)] private int spawnPointIndex;
+    [SerializeField] private bool startsInHouse;
     [SerializeField] private LayerMask obstaclesLayerMask;
     [SerializeField] private LayerMask nodesLayerMask;
 
+    private GhostState state;
+    private Vector2 houseExitPosition;
     private Vector2 currentDirection;
     private Vector2 targetPosition;
     private bool isReverseRequested;
@@ -56,10 +65,21 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
         isReverseRequested = false;
         SetCurrentDirection(Vector2.zero);
         TeleportTo(e.GetLevel().GetGhostSpawnPosition(spawnPointIndex));
+        houseExitPosition = SnapToCellCenter(e.GetLevel().GetGhostHouseExitPosition());
+
+        if (startsInHouse) {
+            state = GhostState.InHouse;
+            ReleaseFromHouse();
+            return;
+        }
+
+        state = GhostState.Normal;
         StartCoroutine(StartMovingRoutine());
     }
 
     private void GhostModeScheduler_OnModeChanged(object sender, GhostModeScheduler.OnModeChangedEventArgs e) {
+        if (state != GhostState.Normal) return;
+
         isReverseRequested = true;
     }
 
@@ -70,6 +90,17 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     }
 
     private void Update() {
+        switch (state) {
+            case GhostState.Leaving:
+                UpdateLeaving();
+                break;
+            case GhostState.Normal:
+                UpdateNormalMovement();
+                break;
+        }
+    }
+
+    private void UpdateNormalMovement() {
         if (currentDirection == Vector2.zero) return;
 
         float distance = movementSpeed * Mathf.Min(Time.deltaTime, MAX_FRAME_TIME);
@@ -86,6 +117,39 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
             distance -= distanceToTarget;
             OnCellCenterReached();
         }
+    }
+
+    private void UpdateLeaving() {
+        float distance = movementSpeed * Mathf.Min(Time.deltaTime, MAX_FRAME_TIME);
+        Vector2 position = transform.position;
+
+        bool isInExitColumn = Mathf.Approximately(position.x, houseExitPosition.x);
+        Vector2 waypoint = isInExitColumn ? houseExitPosition : new Vector2(houseExitPosition.x, position.y);
+
+        if (isInExitColumn) {
+            SetCurrentDirection(Vector2.up);
+        } else {
+            SetCurrentDirection(houseExitPosition.x > position.x ? Vector2.right : Vector2.left);
+        }
+
+        Vector2 next = Vector2.MoveTowards(position, waypoint, distance);
+        SetPosition(next);
+
+        if (next == houseExitPosition) {
+            FinishLeaving();
+        }
+    }
+
+    private void FinishLeaving() {
+        state = GhostState.Normal;
+
+        ChooseDirection();
+    }
+
+    public void ReleaseFromHouse() {
+        if (state != GhostState.InHouse) return;
+
+        state = GhostState.Leaving;
     }
 
     private void SetCurrentDirection(Vector2 direction) {
@@ -178,5 +242,16 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
 
     public Vector2 GetCurrentDirection() {
         return currentDirection;
+    }
+
+    private void OnDrawGizmosSelected() {
+        if (!Application.isPlaying || GhostModeScheduler.Instance == null) return;
+        if (state != GhostState.Normal) return; // No target while waiting in or leaving the house.
+
+        Vector2 target = GetTargetPosition();
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawLine(transform.position, target);
+        Gizmos.DrawWireSphere(target, 0.3f);
     }
 }
