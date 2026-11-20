@@ -5,10 +5,12 @@ using UnityEngine;
 public struct LevelTier {
 
     private const float MAX_SPEED_PERFNT = 100f;
-    
+
     [SerializeField, Min(1)] private int fromLevel;
     [SerializeField, Range(0f, MAX_SPEED_PERFNT)] private float pacmanNormalSpeedPercent;
     [SerializeField, Range(0f, MAX_SPEED_PERFNT)] private float pacmanEatingDotsSpeedPercent;
+    [SerializeField, Range(0f, MAX_SPEED_PERFNT)] private float ghostNormalSpeedPercent;
+    [SerializeField, Range(0f, MAX_SPEED_PERFNT)] private float ghostTunnelSpeedPercent;
 
     public int GetFromLevel() {
         return fromLevel;
@@ -20,6 +22,14 @@ public struct LevelTier {
 
     public float GetPacmanEatingDotsSpeedMultiplier() {
         return PercentToMultiplier(pacmanEatingDotsSpeedPercent);
+    }
+
+    public float GetGhostNormalSpeedMultiplier() {
+        return PercentToMultiplier(ghostNormalSpeedPercent);
+    }
+
+    public float GetGhostTunnelSpeedMultiplier() {
+        return PercentToMultiplier(ghostTunnelSpeedPercent);
     }
 
     private static float PercentToMultiplier(float percent) {
