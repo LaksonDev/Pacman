@@ -59,6 +59,7 @@ public class LevelManager : MonoBehaviour {
     private IEnumerator LoadNextLevelRoutine() {
         yield return new WaitForSeconds(levelCompleteDelay);
         
+        GameManager.Instance.AdvanceLevel();
         LoadLevel(currentLevelNumber + 1);
         isTransitioning = false;
     }
