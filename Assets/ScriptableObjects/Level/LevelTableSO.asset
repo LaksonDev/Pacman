@@ -16,15 +16,25 @@ MonoBehaviour:
   - fromLevel: 1
     pacmanNormalSpeedPercent: 80
     pacmanEatingDotsSpeedPercent: 75
+    ghostNormalSpeedPercent: 70
+    ghostTunnelSpeedPercent: 35
   - fromLevel: 2
     pacmanNormalSpeedPercent: 85
     pacmanEatingDotsSpeedPercent: 80
+    ghostNormalSpeedPercent: 75
+    ghostTunnelSpeedPercent: 40
   - fromLevel: 3
     pacmanNormalSpeedPercent: 90
     pacmanEatingDotsSpeedPercent: 85
+    ghostNormalSpeedPercent: 80
+    ghostTunnelSpeedPercent: 45
   - fromLevel: 4
     pacmanNormalSpeedPercent: 95
     pacmanEatingDotsSpeedPercent: 90
+    ghostNormalSpeedPercent: 85
+    ghostTunnelSpeedPercent: 45
   - fromLevel: 5
     pacmanNormalSpeedPercent: 100
     pacmanEatingDotsSpeedPercent: 95
+    ghostNormalSpeedPercent: 90
+    ghostTunnelSpeedPercent: 50
