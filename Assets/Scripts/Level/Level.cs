@@ -5,6 +5,7 @@ public class Level : MonoBehaviour {
     [SerializeField] private Transform playerSpawnPoint;
     [SerializeField] private Transform[] ghostSpawnPointArray;
     [SerializeField] private Transform ghostHouseExitPoint;
+    [SerializeField] private Rect[] tunnelAreaArray;
 
     public Vector2 GetGhostHouseExitPosition() {
         return ghostHouseExitPoint.position;
@@ -20,5 +21,13 @@ public class Level : MonoBehaviour {
 
     public Vector2 GetGhostSpawnPosition(int index) {
         return ghostSpawnPointArray[index].position;
+    }
+
+    public bool IsInTunnel(Vector2 position) {
+        foreach (Rect area in tunnelAreaArray) {
+            if (area.Contains(position)) return true;
+        }
+
+        return false;
     }
 }
