@@ -18,18 +18,20 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     private const float CELL_SIZE = 1f;
     private const float MAX_FRAME_TIME = 0.05f;
 
-    [SerializeField] private float movementSpeed = 11f;
+    [SerializeField] private float baseSpeed = 15f;
     [SerializeField] private Vector2 scatterTarget;
     [SerializeField, Min(0)] private int spawnPointIndex;
     [SerializeField] private bool startsInHouse;
     [SerializeField] private LayerMask obstaclesLayerMask;
     [SerializeField] private LayerMask nodesLayerMask;
 
+    private Level currentLevel;
     private GhostState state;
     private Vector2 houseExitPosition;
     private Vector2 currentDirection;
     private Vector2 targetPosition;
     private bool isReverseRequested;
+    private bool isFrozen;
     private ContactFilter2D obstacleFilter;
     private ContactFilter2D nodeFilter;
 
@@ -48,12 +50,14 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
 
     private void OnEnable() {
         LevelManager.Instance.OnLevelLoaded += LevelManager_OnLevelLoaded;
+        LevelManager.Instance.OnLevelCompleted += LevelManager_OnLevelCompleted;
         GhostModeScheduler.Instance.OnModeChanged += GhostModeScheduler_OnModeChanged;
     }
 
     private void OnDisable() {
         if (LevelManager.Instance != null) {
             LevelManager.Instance.OnLevelLoaded -= LevelManager_OnLevelLoaded;
+            LevelManager.Instance.OnLevelCompleted -= LevelManager_OnLevelCompleted;
         }
 
         if (GhostModeScheduler.Instance != null) {
@@ -62,10 +66,12 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     }
 
     private void LevelManager_OnLevelLoaded(object sender, LevelManager.OnLevelLoadedEventArgs e) {
+        currentLevel = e.GetLevel();
+        isFrozen = false;
         isReverseRequested = false;
         SetCurrentDirection(Vector2.zero);
-        TeleportTo(e.GetLevel().GetGhostSpawnPosition(spawnPointIndex));
-        houseExitPosition = SnapToCellCenter(e.GetLevel().GetGhostHouseExitPosition());
+        TeleportTo(currentLevel.GetGhostSpawnPosition(spawnPointIndex));
+        houseExitPosition = SnapToCellCenter(currentLevel.GetGhostHouseExitPosition());
 
         if (startsInHouse) {
             state = GhostState.InHouse;
@@ -74,6 +80,10 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
 
         state = GhostState.Normal;
         StartCoroutine(StartMovingRoutine());
+    }
+
+    private void LevelManager_OnLevelCompleted(object sender, LevelManager.OnLevelCompletedEventArgs e) {
+        isFrozen = true;
     }
 
     private void GhostModeScheduler_OnModeChanged(object sender, GhostModeScheduler.OnModeChangedEventArgs e) {
@@ -89,6 +99,8 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     }
 
     private void Update() {
+        if (isFrozen) return;
+
         switch (state) {
             case GhostState.Leaving:
                 UpdateLeaving();
@@ -102,7 +114,7 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     private void UpdateNormalMovement() {
         if (currentDirection == Vector2.zero) return;
 
-        float distance = movementSpeed * Mathf.Min(Time.deltaTime, MAX_FRAME_TIME);
+        float distance = GetCurrentSpeed() * Mathf.Min(Time.deltaTime, MAX_FRAME_TIME);
 
         while (distance > 0f) {
             float distanceToTarget = Vector2.Distance(transform.position, targetPosition);
@@ -119,7 +131,7 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     }
 
     private void UpdateLeaving() {
-        float distance = movementSpeed * Mathf.Min(Time.deltaTime, MAX_FRAME_TIME);
+        float distance = GetCurrentSpeed() * Mathf.Min(Time.deltaTime, MAX_FRAME_TIME);
         Vector2 position = transform.position;
 
         bool isInExitColumn = Mathf.Approximately(position.x, houseExitPosition.x);
@@ -149,6 +161,15 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
         if (state != GhostState.InHouse) return;
 
         state = GhostState.Leaving;
+    }
+
+    private float GetCurrentSpeed() {
+        LevelTier tier = GameManager.Instance.GetCurrentTier();
+        bool isInTunnel = currentLevel.IsInTunnel(transform.position);
+
+        float multiplier = isInTunnel ? tier.GetGhostTunnelSpeedMultiplier() : tier.GetGhostNormalSpeedMultiplier();
+
+        return baseSpeed * multiplier;
     }
 
     private void SetCurrentDirection(Vector2 direction) {
@@ -216,7 +237,7 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     protected Vector2 GetPlayerDirection() {
         return Player.Instance == null ? Vector2.zero : Player.Instance.GetCurrentDirection();
     }
-    
+
     protected Vector2 GetScatterCell() {
         return SnapToCellCenter(scatterTarget);
     }
