@@ -1,13 +1,16 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 public class Player : MonoBehaviour, ITeleportable {
-    
+
     public static Player Instance { get; private set; }
-    
+
     private static readonly Vector2 BOX_SIZE = new Vector2(.8f, .8f);
 
     private const float PLAYER_DEFAULT_FACING_ANGLE = 0f;
+    private const float CELL_SIZE = 1f;
+    private const float MAX_FRAME_TIME = 0.05f;
 
     public event EventHandler OnWalkingChanged;
 
@@ -17,6 +20,8 @@ public class Player : MonoBehaviour, ITeleportable {
 
     private Vector2 currentDirection;
     private Vector2 queuedDirection;
+    private Vector2 targetPosition;
+    private bool isStopped = true;
     private bool isWalking;
     private bool isMovementLocked;
     private ContactFilter2D obstacleFilter;
@@ -45,52 +50,95 @@ public class Player : MonoBehaviour, ITeleportable {
     }
 
     private void LevelManager_OnLevelLoaded(object sender, LevelManager.OnLevelLoadedEventArgs e) {
-        TeleportTo(e.GetLevel().GetPlayerSpawnPosition());
+        SetPosition(e.GetLevel().GetPlayerSpawnPosition());
+        targetPosition = transform.position;
         ResetState();
+        StartCoroutine(UnlockMovementRoutine());
     }
 
     private void LevelManager_OnLevelCompleted(object sender, LevelManager.OnLevelCompletedEventArgs e) {
         isMovementLocked = true;
-        
+
         SetWalking(false);
     }
 
-    private void Update() { 
+    private IEnumerator UnlockMovementRoutine() {
+        yield return new WaitForFixedUpdate();
+
+        isMovementLocked = false;
+    }
+
+    private void Update() {
         if (isMovementLocked) return;
-        
+
         HandleMovement();
     }
 
     private void HandleMovement() {
-        Vector2 movementDirection = playerInput.GetMovementVectorNormalized();
+        ReadInput();
+        TryReverse();
 
-        if (movementDirection != Vector2.zero) {
-            queuedDirection = movementDirection;
+        if (isStopped) {
+            DecideAtCellCenter();
         }
 
-        float movementDistance = movementSpeed * speedMultiplier * Time.deltaTime;
-
-        if (queuedDirection != Vector2.zero && CanMove(queuedDirection, movementDistance)) {
-            SetCurrentDirection(queuedDirection);
-        }
-
+        float distance = movementSpeed * speedMultiplier * Mathf.Min(Time.deltaTime, MAX_FRAME_TIME);
         bool hasMoved = false;
 
-        if (currentDirection != Vector2.zero && CanMove(currentDirection, movementDistance)) {
-            transform.position += (Vector3)(currentDirection * movementDistance);
+        while (!isStopped && distance > 0f) {
             hasMoved = true;
+
+            float distanceToTarget = Vector2.Distance(transform.position, targetPosition);
+
+            if (distanceToTarget > distance) {
+                transform.position += (Vector3)(currentDirection * distance);
+                break;
+            }
+
+            SetPosition(targetPosition);
+            distance -= distanceToTarget;
+            DecideAtCellCenter();
         }
-        
+
         SetWalking(hasMoved);
+    }
+
+    private void ReadInput() {
+        Vector2 heldDirection = playerInput.GetHeldDirection();
+
+        if (heldDirection != Vector2.zero) {
+            queuedDirection = heldDirection;
+        }
+    }
+
+    private void TryReverse() {
+        if (isStopped || queuedDirection == Vector2.zero) return;
+        if (queuedDirection != -currentDirection) return;
+
+        SetCurrentDirection(queuedDirection);
+        targetPosition += currentDirection * CELL_SIZE;
+    }
+
+    private void DecideAtCellCenter() {
+        if (queuedDirection != Vector2.zero && CanMove(queuedDirection)) {
+            SetCurrentDirection(queuedDirection);
+        } else if (!CanMove(currentDirection)) {
+            isStopped = true;
+            return;
+        }
+
+        isStopped = false;
+        targetPosition = GetNextCellCenter(transform.position, currentDirection);
     }
 
     private void ResetState() {
         currentDirection = Vector2.zero;
         queuedDirection = Vector2.zero;
+        isStopped = true;
 
         transform.rotation = Quaternion.identity;
 
-        isMovementLocked = false;
+        isMovementLocked = true;
         SetWalking(false);
     }
 
@@ -110,14 +158,32 @@ public class Player : MonoBehaviour, ITeleportable {
         if (this.isWalking == isWalking) return;
 
         this.isWalking = isWalking;
-        OnWalkingChanged?.Invoke(this,EventArgs.Empty);
+        OnWalkingChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    private bool CanMove(Vector2 direction, float distance) {
+    private bool CanMove(Vector2 direction) {
+        if (direction == Vector2.zero) return false;
+
         int hitCount = Physics2D.BoxCast(transform.position, BOX_SIZE, 0f, direction, obstacleFilter, hitBuffer,
-            distance);
+            CELL_SIZE);
 
         return hitCount == 0;
+    }
+
+    private void SetPosition(Vector2 position) {
+        transform.position = new Vector3(position.x, position.y, transform.position.z);
+    }
+
+    private static Vector2 SnapToCellCenter(Vector2 position) {
+        return new Vector2(Mathf.Floor(position.x) + 0.5f, Mathf.Floor(position.y) + 0.5f);
+    }
+
+    private static Vector2 GetNextCellCenter(Vector2 position, Vector2 direction) {
+        if (direction.x > 0f) return new Vector2(Mathf.Floor(position.x - 0.5f) + 1.5f, position.y);
+        if (direction.x < 0f) return new Vector2(Mathf.Ceil(position.x - 0.5f) - 0.5f, position.y);
+        if (direction.y > 0f) return new Vector2(position.x, Mathf.Floor(position.y - 0.5f) + 1.5f);
+
+        return new Vector2(position.x, Mathf.Ceil(position.y - 0.5f) - 0.5f);
     }
 
     public void SetSpeedMultiplier(float multiplier) {
@@ -127,12 +193,16 @@ public class Player : MonoBehaviour, ITeleportable {
     public bool GetPlayerIsWalking() {
         return isWalking;
     }
-    
+
     public Vector2 GetCurrentDirection() {
         return currentDirection;
     }
 
     public void TeleportTo(Vector2 position) {
-        transform.position = new Vector3(position.x, position.y, transform.position.z);
+        Vector2 center = SnapToCellCenter(position);
+
+        SetPosition(center);
+        targetPosition = center;
+        isStopped = true;
     }
 }

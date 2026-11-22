@@ -1258,7 +1258,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3919e2baf5800ae4a9455041027bd934, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Pinky
-  movementSpeed: 11
+  baseSpeed: 15
   scatterTarget: {x: -12.5, y: 12.5}
   spawnPointIndex: 2
   startsInHouse: 1
@@ -1829,7 +1829,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b21f654f64251d469f23d53d294566b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Clyde
-  movementSpeed: 11
+  baseSpeed: 15
   scatterTarget: {x: -12.5, y: -15.5}
   spawnPointIndex: 3
   startsInHouse: 1
@@ -1870,7 +1870,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 73133381e210075429a350e482d4d397, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Inky
-  movementSpeed: 11
+  baseSpeed: 15
   scatterTarget: {x: 12.5, y: -15.5}
   spawnPointIndex: 1
   startsInHouse: 1
@@ -2195,7 +2195,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3857022dc14aba741a2c29fc956cbea1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Blinky
-  movementSpeed: 11
+  baseSpeed: 15
   scatterTarget: {x: 12.5, y: 12.5}
   spawnPointIndex: 0
   startsInHouse: 0
