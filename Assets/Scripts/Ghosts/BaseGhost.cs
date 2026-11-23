@@ -70,14 +70,18 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
         isFrozen = false;
         isReverseRequested = false;
         SetCurrentDirection(Vector2.zero);
-        TeleportTo(currentLevel.GetGhostSpawnPosition(spawnPointIndex));
         houseExitPosition = SnapToCellCenter(currentLevel.GetGhostHouseExitPosition());
 
+        Vector2 spawnPosition = currentLevel.GetGhostSpawnPosition(spawnPointIndex);
+
         if (startsInHouse) {
+            SetPosition(spawnPosition);
+            targetPosition = spawnPosition;
             state = GhostState.InHouse;
             return;
         }
 
+        TeleportTo(spawnPosition);
         state = GhostState.Normal;
         StartCoroutine(StartMovingRoutine());
     }
