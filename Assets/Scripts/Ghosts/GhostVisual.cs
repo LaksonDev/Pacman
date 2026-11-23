@@ -43,6 +43,7 @@ public class GhostVisual : MonoBehaviour {
 
     private void UpdateBodyFrame() {
         if (bodySpriteArray.Length == 0) return;
+        if (ghost.GetCurrentDirection() == Vector2.zero) return;
         
         int frame = Mathf.FloorToInt(Time.time / bodyFrameInterval) % bodySpriteArray.Length;
         if (frame == shownBodyFrame) return;
