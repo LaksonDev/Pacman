@@ -52,6 +52,7 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
         LevelManager.Instance.OnLevelLoaded += LevelManager_OnLevelLoaded;
         LevelManager.Instance.OnLevelCompleted += LevelManager_OnLevelCompleted;
         GhostModeScheduler.Instance.OnModeChanged += GhostModeScheduler_OnModeChanged;
+        Pellet.OnAnyPowerPelletEaten += Pellet_OnAnyPowerPelletEaten;
     }
 
     private void OnDisable() {
@@ -63,6 +64,12 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
         if (GhostModeScheduler.Instance != null) {
             GhostModeScheduler.Instance.OnModeChanged -= GhostModeScheduler_OnModeChanged;
         }
+        
+        Pellet.OnAnyPowerPelletEaten -= Pellet_OnAnyPowerPelletEaten;
+    }
+    
+    private void Pellet_OnAnyPowerPelletEaten(object sender, EventArgs e) {
+        Debug.Log($"{name}: should enter Frightened state (current state: {state})", this);
     }
 
     private void LevelManager_OnLevelLoaded(object sender, LevelManager.OnLevelLoadedEventArgs e) {
