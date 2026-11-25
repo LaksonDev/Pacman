@@ -5,6 +5,7 @@ using UnityEngine;
 public abstract class BaseGhost : MonoBehaviour, ITeleportable {
 
     public event EventHandler OnDirectionChanged;
+    public event EventHandler OnFrightenedChanged;
 
     private enum GhostState {
         InHouse,
@@ -74,7 +75,7 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     private void LevelManager_OnLevelLoaded(object sender, LevelManager.OnLevelLoadedEventArgs e) {
         currentLevel = e.GetLevel();
         isFrozen = false;
-        isFrightened = false;
+        SetFrightened(false);
         isReverseRequested = false;
         SetCurrentDirection(Vector2.zero);
         houseExitPosition = SnapToCellCenter(currentLevel.GetGhostHouseExitPosition());
@@ -104,7 +105,7 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     }
 
     private void GhostModeScheduler_OnFrightenedStarted(object sender, EventArgs e) {
-        isFrightened = true;
+        SetFrightened(true);
 
         if (state == GhostState.Normal) {
             isReverseRequested = true;
@@ -112,7 +113,7 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     }
 
     private void GhostModeScheduler_OnFrightenedEnded(object sender, EventArgs e) {
-        isFrightened = false;
+        SetFrightened(false);
     }
 
     private IEnumerator StartMovingRoutine() {
@@ -206,6 +207,17 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
 
         currentDirection = direction;
         OnDirectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+    
+    private void SetFrightened(bool value) {
+        if (isFrightened == value) return;
+
+        isFrightened = value;
+        OnFrightenedChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public bool IsFrightened() {
+        return isFrightened;
     }
 
     private void OnCellCenterReached() {

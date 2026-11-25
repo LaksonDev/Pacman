@@ -81,7 +81,6 @@ public class GhostModeScheduler : MonoBehaviour {
 
         isFrightened = true;
         frightenedTimeLeft = duration;
-        Debug.Log($"Frightened started for {duration}s");
         OnFrightenedStarted?.Invoke(this, EventArgs.Empty);
     }
 
@@ -121,7 +120,6 @@ public class GhostModeScheduler : MonoBehaviour {
 
     private void EndFrightened() {
         isFrightened = false;
-        Debug.Log("Frightened ended");
         OnFrightenedEnded?.Invoke(this, EventArgs.Empty);
     }
 
@@ -138,5 +136,9 @@ public class GhostModeScheduler : MonoBehaviour {
 
     public bool IsFrightened() {
         return isFrightened;
+    }
+
+    public float GetFrightenedTimeLeft() {
+        return isFrightened ? Mathf.Max(0f, frightenedTimeLeft) : 0f;
     }
 }
