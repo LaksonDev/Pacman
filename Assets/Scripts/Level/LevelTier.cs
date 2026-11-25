@@ -11,6 +11,8 @@ public struct LevelTier {
     [SerializeField, Range(0f, MAX_SPEED_PERFNT)] private float pacmanEatingDotsSpeedPercent;
     [SerializeField, Range(0f, MAX_SPEED_PERFNT)] private float ghostNormalSpeedPercent;
     [SerializeField, Range(0f, MAX_SPEED_PERFNT)] private float ghostTunnelSpeedPercent;
+    [SerializeField, Range(0f, MAX_SPEED_PERFNT)] private float ghostFrightenedSpeedPercent;
+    [SerializeField, Min(0f)] private float frightenedDurationSeconds;
 
     public int GetFromLevel() {
         return fromLevel;
@@ -30,6 +32,14 @@ public struct LevelTier {
 
     public float GetGhostTunnelSpeedMultiplier() {
         return PercentToMultiplier(ghostTunnelSpeedPercent);
+    }
+
+    public float GetGhostFrightenedSpeedMultiplier() {
+        return PercentToMultiplier(ghostFrightenedSpeedPercent);
+    }
+
+    public float GetFrightenedDuration() {
+        return frightenedDurationSeconds;
     }
 
     private static float PercentToMultiplier(float percent) {
