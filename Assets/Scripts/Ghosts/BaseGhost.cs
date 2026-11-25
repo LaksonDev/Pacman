@@ -32,11 +32,13 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     private Vector2 targetPosition;
     private bool isReverseRequested;
     private bool isFrozen;
+    private bool isFrightened;
     private ContactFilter2D obstacleFilter;
     private ContactFilter2D nodeFilter;
 
     private readonly RaycastHit2D[] hitBuffer = new RaycastHit2D[1];
     private readonly Collider2D[] nodeBuffer = new Collider2D[1];
+    private readonly Vector2[] candidateBuffer = new Vector2[4];
 
     private void Awake() {
         obstacleFilter = new ContactFilter2D();
@@ -52,7 +54,8 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
         LevelManager.Instance.OnLevelLoaded += LevelManager_OnLevelLoaded;
         LevelManager.Instance.OnLevelCompleted += LevelManager_OnLevelCompleted;
         GhostModeScheduler.Instance.OnModeChanged += GhostModeScheduler_OnModeChanged;
-        Pellet.OnAnyPowerPelletEaten += Pellet_OnAnyPowerPelletEaten;
+        GhostModeScheduler.Instance.OnFrightenedStarted += GhostModeScheduler_OnFrightenedStarted;
+        GhostModeScheduler.Instance.OnFrightenedEnded += GhostModeScheduler_OnFrightenedEnded;
     }
 
     private void OnDisable() {
@@ -63,18 +66,15 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
 
         if (GhostModeScheduler.Instance != null) {
             GhostModeScheduler.Instance.OnModeChanged -= GhostModeScheduler_OnModeChanged;
+            GhostModeScheduler.Instance.OnFrightenedStarted -= GhostModeScheduler_OnFrightenedStarted;
+            GhostModeScheduler.Instance.OnFrightenedEnded -= GhostModeScheduler_OnFrightenedEnded;
         }
-        
-        Pellet.OnAnyPowerPelletEaten -= Pellet_OnAnyPowerPelletEaten;
-    }
-    
-    private void Pellet_OnAnyPowerPelletEaten(object sender, EventArgs e) {
-        Debug.Log($"{name}: should enter Frightened state (current state: {state})", this);
     }
 
     private void LevelManager_OnLevelLoaded(object sender, LevelManager.OnLevelLoadedEventArgs e) {
         currentLevel = e.GetLevel();
         isFrozen = false;
+        isFrightened = false;
         isReverseRequested = false;
         SetCurrentDirection(Vector2.zero);
         houseExitPosition = SnapToCellCenter(currentLevel.GetGhostHouseExitPosition());
@@ -101,6 +101,18 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
         if (state != GhostState.Normal) return;
 
         isReverseRequested = true;
+    }
+
+    private void GhostModeScheduler_OnFrightenedStarted(object sender, EventArgs e) {
+        isFrightened = true;
+
+        if (state == GhostState.Normal) {
+            isReverseRequested = true;
+        }
+    }
+
+    private void GhostModeScheduler_OnFrightenedEnded(object sender, EventArgs e) {
+        isFrightened = false;
     }
 
     private IEnumerator StartMovingRoutine() {
@@ -176,9 +188,15 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
 
     private float GetCurrentSpeed() {
         LevelTier tier = GameManager.Instance.GetCurrentTier();
-        bool isInTunnel = currentLevel.IsInTunnel(transform.position);
 
-        float multiplier = isInTunnel ? tier.GetGhostTunnelSpeedMultiplier() : tier.GetGhostNormalSpeedMultiplier();
+        float multiplier;
+        if (currentLevel.IsInTunnel(transform.position)) {
+            multiplier = tier.GetGhostTunnelSpeedMultiplier();
+        } else if (isFrightened) {
+            multiplier = tier.GetGhostFrightenedSpeedMultiplier();
+        } else {
+            multiplier = tier.GetGhostNormalSpeedMultiplier();
+        }
 
         return baseSpeed * multiplier;
     }
@@ -209,6 +227,13 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     }
 
     private void ChooseDirection() {
+        Vector2 chosenDirection = isFrightened ? PickRandomDirection() : PickDirectionTowardsTarget();
+
+        SetCurrentDirection(chosenDirection != Vector2.zero ? chosenDirection : -currentDirection);
+        targetPosition = (Vector2)transform.position + currentDirection * CELL_SIZE;
+    }
+
+    private Vector2 PickDirectionTowardsTarget() {
         Vector2 target = GetTargetPosition();
 
         Vector2 bestDirection = Vector2.zero;
@@ -227,8 +252,20 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
             bestDirection = direction;
         }
 
-        SetCurrentDirection(bestDirection != Vector2.zero ? bestDirection : -currentDirection);
-        targetPosition = (Vector2)transform.position + currentDirection * CELL_SIZE;
+        return bestDirection;
+    }
+
+    private Vector2 PickRandomDirection() {
+        int candidateCount = 0;
+
+        foreach (Vector2 direction in DIRECTIONS) {
+            if (direction == -currentDirection) continue;
+            if (!CanMove(direction)) continue;
+
+            candidateBuffer[candidateCount++] = direction;
+        }
+
+        return candidateCount > 0 ? candidateBuffer[UnityEngine.Random.Range(0, candidateCount)] : Vector2.zero;
     }
 
     private Vector2 GetTargetPosition() {
