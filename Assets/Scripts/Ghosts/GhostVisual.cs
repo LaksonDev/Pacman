@@ -33,6 +33,7 @@ public class GhostVisual : MonoBehaviour {
     private void OnEnable() {
         ghost.OnDirectionChanged += Ghost_OnDirectionChanged;
         ghost.OnFrightenedChanged += Ghost_OnFrightenedChanged;
+        ghost.OnEatenChanged += Ghost_OnEatenChanged;
 
         RefreshAppearance();
         UpdateEyes();
@@ -41,10 +42,16 @@ public class GhostVisual : MonoBehaviour {
     private void OnDisable() {
         ghost.OnDirectionChanged -= Ghost_OnDirectionChanged;
         ghost.OnFrightenedChanged -= Ghost_OnFrightenedChanged;
+        ghost.OnEatenChanged -= Ghost_OnEatenChanged;
     }
 
     private void Update() {
         UpdateBodySprite();
+    }
+    
+    private void Ghost_OnEatenChanged(object sender, EventArgs e) {
+        RefreshAppearance();
+        UpdateEyes();
     }
 
     private void Ghost_OnDirectionChanged(object sender, EventArgs e) {
@@ -53,22 +60,31 @@ public class GhostVisual : MonoBehaviour {
 
     private void Ghost_OnFrightenedChanged(object sender, EventArgs e) {
         RefreshAppearance();
+        UpdateEyes();
     }
 
     private void RefreshAppearance() {
+        bool isEaten = ghost.IsEaten();
         bool isFrightened = ghost.IsFrightened();
 
+        bodyRenderer.enabled = !isEaten;
+        eyesRenderer.enabled = isEaten || !isFrightened;
         bodyRenderer.color = isFrightened ? Color.white : normalBodyColor;
-        eyesRenderer.enabled = !isFrightened;
+
+        if (isEaten) return;
 
         UpdateBodySprite();
     }
 
     private void UpdateBodySprite() {
+        if (ghost.IsEaten()) return;
+        
         Sprite[] spriteArray = GetActiveSpriteArray();
         if (spriteArray.Length == 0) return;
 
-        int frame = Mathf.FloorToInt(Time.time / bodyFrameInterval) % spriteArray.Length;
+        int frame = ghost.GetCurrentDirection() == Vector2.zero
+            ? 0
+            : Mathf.FloorToInt(Time.time / bodyFrameInterval) % spriteArray.Length;
         Sprite sprite = spriteArray[frame];
 
         if (bodyRenderer.sprite == sprite) return;
