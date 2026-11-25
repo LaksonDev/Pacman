@@ -2,15 +2,18 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-public abstract class BaseGhost : MonoBehaviour, ITeleportable {
+public abstract class BaseGhost : MonoBehaviour, ITeleportable, IEdible {
 
     public event EventHandler OnDirectionChanged;
     public event EventHandler OnFrightenedChanged;
+    public event EventHandler OnEatenChanged;
 
     private enum GhostState {
         InHouse,
         Leaving,
         Normal,
+        Eaten,
+        ReturningToSpawn,
     }
 
     private static readonly Vector2 BOX_SIZE = new Vector2(.8f, .8f);
@@ -29,6 +32,7 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     private Level currentLevel;
     private GhostState state;
     private Vector2 houseExitPosition;
+    private Vector2 spawnPosition;
     private Vector2 currentDirection;
     private Vector2 targetPosition;
     private bool isReverseRequested;
@@ -73,25 +77,29 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     }
 
     private void LevelManager_OnLevelLoaded(object sender, LevelManager.OnLevelLoadedEventArgs e) {
+        bool wasEaten = IsEaten();
+
         currentLevel = e.GetLevel();
         isFrozen = false;
-        SetFrightened(false);
         isReverseRequested = false;
         SetCurrentDirection(Vector2.zero);
         houseExitPosition = SnapToCellCenter(currentLevel.GetGhostHouseExitPosition());
 
-        Vector2 spawnPosition = currentLevel.GetGhostSpawnPosition(spawnPointIndex);
-
-        if (startsInHouse) {
-            SetPosition(spawnPosition);
-            targetPosition = spawnPosition;
-            state = GhostState.InHouse;
-            return;
+        spawnPosition = currentLevel.GetGhostSpawnPosition(spawnPointIndex);
+        if (!startsInHouse) {
+            spawnPosition = SnapToCellCenter(spawnPosition);
         }
 
-        TeleportTo(spawnPosition);
-        state = GhostState.Normal;
-        StartCoroutine(StartMovingRoutine());
+        SetPosition(spawnPosition);
+        targetPosition = spawnPosition;
+        state = startsInHouse ? GhostState.InHouse : GhostState.Normal;
+
+        SetFrightened(false);
+        if (wasEaten) OnEatenChanged?.Invoke(this, EventArgs.Empty);
+
+        if (!startsInHouse) {
+            StartCoroutine(StartMovingRoutine());
+        }
     }
 
     private void LevelManager_OnLevelCompleted(object sender, LevelManager.OnLevelCompletedEventArgs e) {
@@ -105,6 +113,8 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     }
 
     private void GhostModeScheduler_OnFrightenedStarted(object sender, EventArgs e) {
+        if (IsEaten()) return;
+
         SetFrightened(true);
 
         if (state == GhostState.Normal) {
@@ -130,12 +140,16 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
                 UpdateLeaving();
                 break;
             case GhostState.Normal:
-                UpdateNormalMovement();
+            case GhostState.Eaten:
+                UpdateGridMovement();
+                break;
+            case GhostState.ReturningToSpawn:
+                UpdateReturningToSpawn();
                 break;
         }
     }
 
-    private void UpdateNormalMovement() {
+    private void UpdateGridMovement() {
         if (currentDirection == Vector2.zero) return;
 
         float distance = GetCurrentSpeed() * Mathf.Min(Time.deltaTime, MAX_FRAME_TIME);
@@ -151,6 +165,8 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
             SetPosition(targetPosition);
             distance -= distanceToTarget;
             OnCellCenterReached();
+
+            if (state == GhostState.ReturningToSpawn) return;
         }
     }
 
@@ -175,6 +191,28 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
         }
     }
 
+    private void UpdateReturningToSpawn() {
+        float distance = GetCurrentSpeed() * Mathf.Min(Time.deltaTime, MAX_FRAME_TIME);
+        Vector2 position = transform.position;
+
+        bool isOnSpawnRow = Mathf.Approximately(position.y, spawnPosition.y);
+        Vector2 waypoint = isOnSpawnRow ? spawnPosition : new Vector2(position.x, spawnPosition.y);
+
+        if (isOnSpawnRow) {
+            SetCurrentDirection(spawnPosition.x > position.x ? Vector2.right : Vector2.left);
+        } else {
+            SetCurrentDirection(spawnPosition.y > position.y ? Vector2.up : Vector2.down);
+        }
+
+        Vector2 next = Vector2.MoveTowards(position, waypoint, distance);
+        SetPosition(next);
+
+        if (next != spawnPosition) return;
+
+        state = GhostState.Leaving;
+        OnEatenChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     private void FinishLeaving() {
         state = GhostState.Normal;
 
@@ -191,7 +229,9 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
         LevelTier tier = GameManager.Instance.GetCurrentTier();
 
         float multiplier;
-        if (currentLevel.IsInTunnel(transform.position)) {
+        if (IsEaten()) {
+            multiplier = tier.GetGhostEatenSpeedMultiplier();
+        } else if (currentLevel.IsInTunnel(transform.position)) {
             multiplier = tier.GetGhostTunnelSpeedMultiplier();
         } else if (isFrightened) {
             multiplier = tier.GetGhostFrightenedSpeedMultiplier();
@@ -208,7 +248,7 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
         currentDirection = direction;
         OnDirectionChanged?.Invoke(this, EventArgs.Empty);
     }
-    
+
     private void SetFrightened(bool value) {
         if (isFrightened == value) return;
 
@@ -220,7 +260,26 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
         return isFrightened;
     }
 
+    public bool IsEaten() {
+        return state == GhostState.Eaten || state == GhostState.ReturningToSpawn;
+    }
+
+    public void Eat() {
+        if (state != GhostState.Normal || !isFrightened) return;
+
+        state = GhostState.Eaten;
+        isReverseRequested = false;
+
+        SetFrightened(false);
+        OnEatenChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     private void OnCellCenterReached() {
+        if (state == GhostState.Eaten && (Vector2)transform.position == houseExitPosition) {
+            state = GhostState.ReturningToSpawn;
+            return;
+        }
+
         if (isReverseRequested) {
             isReverseRequested = false;
             SetCurrentDirection(-currentDirection);
@@ -239,7 +298,9 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     }
 
     private void ChooseDirection() {
-        Vector2 chosenDirection = isFrightened ? PickRandomDirection() : PickDirectionTowardsTarget();
+        Vector2 chosenDirection = state == GhostState.Normal && isFrightened
+            ? PickRandomDirection()
+            : PickDirectionTowardsTarget();
 
         SetCurrentDirection(chosenDirection != Vector2.zero ? chosenDirection : -currentDirection);
         targetPosition = (Vector2)transform.position + currentDirection * CELL_SIZE;
@@ -281,6 +342,8 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable {
     }
 
     private Vector2 GetTargetPosition() {
+        if (state == GhostState.Eaten) return houseExitPosition;
+
         bool isScatter = GhostModeScheduler.Instance.GetCurrentMode() == GhostModeScheduler.GhostMode.Scatter;
 
         return isScatter ? GetScatterCell() : GetChaseTarget();
