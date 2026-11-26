@@ -68,7 +68,6 @@ public class Player : MonoBehaviour, ITeleportable {
         if (playerLives == 0) return;
 
         playerLives--;
-        Debug.Log($"Lives left: {playerLives}"); // TEMP
 
         if (playerLives == 0) {
             OnGameOver?.Invoke(this, EventArgs.Empty);
