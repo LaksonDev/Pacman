@@ -5,12 +5,15 @@ using UnityEngine;
 public class Player : MonoBehaviour, ITeleportable {
 
     public static Player Instance { get; private set; }
-
     private static readonly Vector2 BOX_SIZE = new Vector2(.8f, .8f);
+
+    public event EventHandler OnLifeLost;
+    public event EventHandler OnGameOver;
 
     private const float PLAYER_DEFAULT_FACING_ANGLE = 0f;
     private const float CELL_SIZE = 1f;
     private const float MAX_FRAME_TIME = 0.05f;
+    private const byte STARTING_LIVES = 3;
 
     public event EventHandler OnWalkingChanged;
 
@@ -26,6 +29,7 @@ public class Player : MonoBehaviour, ITeleportable {
     private bool isMovementLocked;
     private ContactFilter2D obstacleFilter;
     private float speedMultiplier = 1f;
+    private byte playerLives = STARTING_LIVES;
 
     private readonly RaycastHit2D[] hitBuffer = new RaycastHit2D[1];
 
@@ -40,6 +44,7 @@ public class Player : MonoBehaviour, ITeleportable {
     private void OnEnable() {
         LevelManager.Instance.OnLevelCompleted += LevelManager_OnLevelCompleted;
         LevelManager.Instance.OnLevelLoaded += LevelManager_OnLevelLoaded;
+        BaseGhost.OnAnyGhostCaughtPlayer += BaseGhost_OnAnyGhostCaughtPlayer;
     }
 
     private void OnDisable() {
@@ -47,6 +52,38 @@ public class Player : MonoBehaviour, ITeleportable {
 
         LevelManager.Instance.OnLevelCompleted -= LevelManager_OnLevelCompleted;
         LevelManager.Instance.OnLevelLoaded -= LevelManager_OnLevelLoaded;
+        BaseGhost.OnAnyGhostCaughtPlayer -= BaseGhost_OnAnyGhostCaughtPlayer;
+    }
+    
+    private void BaseGhost_OnAnyGhostCaughtPlayer(object sender, EventArgs e) {
+        if (isMovementLocked) return;
+
+        isMovementLocked = true;
+        SetWalking(false);
+
+        LoseLife();
+    }
+
+    private void LoseLife() {
+        if (playerLives == 0) return;
+
+        playerLives--;
+        Debug.Log($"Lives left: {playerLives}"); // TEMP
+
+        if (playerLives == 0) {
+            OnGameOver?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
+        OnLifeLost?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void ResetLives() {
+        playerLives = STARTING_LIVES;
+    }
+
+    public byte GetLives() {
+        return playerLives;
     }
 
     private void LevelManager_OnLevelLoaded(object sender, LevelManager.OnLevelLoadedEventArgs e) {
