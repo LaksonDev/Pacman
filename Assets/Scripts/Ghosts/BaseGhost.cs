@@ -4,6 +4,8 @@ using UnityEngine;
 
 public abstract class BaseGhost : MonoBehaviour, ITeleportable, IEdible {
 
+    public static event EventHandler OnAnyGhostCaughtPlayer;
+    
     public event EventHandler OnDirectionChanged;
     public event EventHandler OnFrightenedChanged;
     public event EventHandler OnEatenChanged;
@@ -61,9 +63,12 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable, IEdible {
         GhostModeScheduler.Instance.OnModeChanged += GhostModeScheduler_OnModeChanged;
         GhostModeScheduler.Instance.OnFrightenedStarted += GhostModeScheduler_OnFrightenedStarted;
         GhostModeScheduler.Instance.OnFrightenedEnded += GhostModeScheduler_OnFrightenedEnded;
+        OnAnyGhostCaughtPlayer += BaseGhost_OnAnyGhostCaughtPlayer;
     }
 
     private void OnDisable() {
+        OnAnyGhostCaughtPlayer -= BaseGhost_OnAnyGhostCaughtPlayer;
+        
         if (LevelManager.Instance != null) {
             LevelManager.Instance.OnLevelLoaded -= LevelManager_OnLevelLoaded;
             LevelManager.Instance.OnLevelCompleted -= LevelManager_OnLevelCompleted;
@@ -74,6 +79,11 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable, IEdible {
             GhostModeScheduler.Instance.OnFrightenedStarted -= GhostModeScheduler_OnFrightenedStarted;
             GhostModeScheduler.Instance.OnFrightenedEnded -= GhostModeScheduler_OnFrightenedEnded;
         }
+    }
+    
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStaticData() {
+        OnAnyGhostCaughtPlayer = null;
     }
 
     private void LevelManager_OnLevelLoaded(object sender, LevelManager.OnLevelLoadedEventArgs e) {
@@ -103,6 +113,10 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable, IEdible {
     }
 
     private void LevelManager_OnLevelCompleted(object sender, LevelManager.OnLevelCompletedEventArgs e) {
+        isFrozen = true;
+    }
+
+    private void BaseGhost_OnAnyGhostCaughtPlayer(object sender, EventArgs e) {
         isFrozen = true;
     }
 
@@ -265,7 +279,14 @@ public abstract class BaseGhost : MonoBehaviour, ITeleportable, IEdible {
     }
 
     public void Eat() {
-        if (state != GhostState.Normal || !isFrightened) return;
+        if (isFrozen || IsEaten()) return;
+
+        if (!isFrightened) {
+            OnAnyGhostCaughtPlayer?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
+        if (state != GhostState.Normal) return;
 
         state = GhostState.Eaten;
         isReverseRequested = false;
