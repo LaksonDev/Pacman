@@ -16,40 +16,40 @@ MonoBehaviour:
   - fromLevel: 1
     pacmanNormalSpeedPercent: 80
     pacmanEatingDotsSpeedPercent: 75
-    ghostNormalSpeedPercent: 70
-    ghostTunnelSpeedPercent: 35
-    ghostFrightenedSpeedPercent: 30
-    frightenedDurationSeconds: 15
+    ghostNormalSpeedPercent: 75
+    ghostTunnelSpeedPercent: 40
+    ghostFrightenedSpeedPercent: 40
+    frightenedDurationSeconds: 6.5
     ghostEatenSpeedPercent: 100
   - fromLevel: 2
     pacmanNormalSpeedPercent: 85
     pacmanEatingDotsSpeedPercent: 80
-    ghostNormalSpeedPercent: 75
-    ghostTunnelSpeedPercent: 40
-    ghostFrightenedSpeedPercent: 35
-    frightenedDurationSeconds: 14
+    ghostNormalSpeedPercent: 80
+    ghostTunnelSpeedPercent: 45
+    ghostFrightenedSpeedPercent: 45
+    frightenedDurationSeconds: 6
     ghostEatenSpeedPercent: 100
   - fromLevel: 3
     pacmanNormalSpeedPercent: 90
     pacmanEatingDotsSpeedPercent: 85
-    ghostNormalSpeedPercent: 80
-    ghostTunnelSpeedPercent: 45
-    ghostFrightenedSpeedPercent: 40
-    frightenedDurationSeconds: 13
+    ghostNormalSpeedPercent: 85
+    ghostTunnelSpeedPercent: 50
+    ghostFrightenedSpeedPercent: 50
+    frightenedDurationSeconds: 5.5
     ghostEatenSpeedPercent: 100
   - fromLevel: 4
     pacmanNormalSpeedPercent: 95
     pacmanEatingDotsSpeedPercent: 90
-    ghostNormalSpeedPercent: 85
-    ghostTunnelSpeedPercent: 45
-    ghostFrightenedSpeedPercent: 45
-    frightenedDurationSeconds: 12
+    ghostNormalSpeedPercent: 90
+    ghostTunnelSpeedPercent: 50
+    ghostFrightenedSpeedPercent: 55
+    frightenedDurationSeconds: 5
     ghostEatenSpeedPercent: 100
   - fromLevel: 5
     pacmanNormalSpeedPercent: 100
     pacmanEatingDotsSpeedPercent: 95
-    ghostNormalSpeedPercent: 90
-    ghostTunnelSpeedPercent: 50
-    ghostFrightenedSpeedPercent: 45
-    frightenedDurationSeconds: 10
+    ghostNormalSpeedPercent: 95
+    ghostTunnelSpeedPercent: 55
+    ghostFrightenedSpeedPercent: 55
+    frightenedDurationSeconds: 4.5
     ghostEatenSpeedPercent: 100
