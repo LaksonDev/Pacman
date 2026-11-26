@@ -27,6 +27,11 @@ public class ScoreManager : MonoBehaviour {
             Instance = null;
         }
     }
+    
+    public void ResetScore() {
+        score = 0;
+        OnScoreChanged?.Invoke(this, EventArgs.Empty);
+    }
 
     private void Pellet_OnAnyPelletEaten(object sender, Pellet.OnAnyPelletEatenEventArgs e) {
         AddPoints(e.GetPelletSO().GetPoints());

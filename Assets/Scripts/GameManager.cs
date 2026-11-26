@@ -33,6 +33,13 @@ public class GameManager : MonoBehaviour {
         
         OnLevelChanged?.Invoke(this,EventArgs.Empty);
     }
+    
+        public void ResetLevel() {
+            currentLevel = startingLevel;
+            currentTier = levelTableSO.GetTierFromLevel(currentLevel);
+    
+            OnLevelChanged?.Invoke(this, EventArgs.Empty);
+        }
 
     public byte GetCurrentLevel() {
         return currentLevel;
