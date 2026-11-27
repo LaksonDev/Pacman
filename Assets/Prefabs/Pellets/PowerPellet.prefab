@@ -71,5 +71,25 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7159660874114034750, guid: d00754c46bec2ef40b11b0fe8190a6e1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4575056904005204586}
   m_SourcePrefab: {fileID: 100100000, guid: d00754c46bec2ef40b11b0fe8190a6e1, type: 3}
+--- !u!1 &7690447697488523147 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7159660874114034750, guid: d00754c46bec2ef40b11b0fe8190a6e1, type: 3}
+  m_PrefabInstance: {fileID: 713201304588141493}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4575056904005204586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7690447697488523147}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b088097f7ff3a4743b71976654cbe17e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PowerPelletBlinking

@@ -1,10 +1,9 @@
 using System;
-using System.Collections;
 using UnityEngine;
 
 [DefaultExecutionOrder(-90)]
 public class GhostModeScheduler : MonoBehaviour {
-    
+
     public static GhostModeScheduler Instance { get; private set; }
 
     public enum GhostMode {
@@ -25,10 +24,17 @@ public class GhostModeScheduler : MonoBehaviour {
         }
     }
 
+    public event EventHandler OnFrightenedStarted;
+    public event EventHandler OnFrightenedEnded;
+
     [SerializeField] private GhostModeTimingSO ghostModeTimingSO;
-    
+
     private GhostMode currentGhostMode = GhostMode.Scatter;
-    private Coroutine scheduleRoutine;
+    private int phaseIndex;
+    private float phaseTimeLeft;
+    private bool isRunning;
+    private bool isFrightened;
+    private float frightenedTimeLeft;
 
     private void Awake() {
         Instance = this;
@@ -36,12 +42,17 @@ public class GhostModeScheduler : MonoBehaviour {
 
     private void OnEnable() {
         LevelManager.Instance.OnLevelLoaded += LevelManager_OnLevelLoaded;
+        LevelManager.Instance.OnLevelCompleted += LevelManager_OnLevelCompleted;
+        Pellet.OnAnyPowerPelletEaten += Pellet_OnAnyPowerPelletEaten;
     }
-    
+
     private void OnDisable() {
         if (LevelManager.Instance != null) {
             LevelManager.Instance.OnLevelLoaded -= LevelManager_OnLevelLoaded;
+            LevelManager.Instance.OnLevelCompleted -= LevelManager_OnLevelCompleted;
         }
+
+        Pellet.OnAnyPowerPelletEaten -= Pellet_OnAnyPowerPelletEaten;
     }
 
     private void OnDestroy() {
@@ -51,24 +62,67 @@ public class GhostModeScheduler : MonoBehaviour {
     }
 
     private void LevelManager_OnLevelLoaded(object sender, LevelManager.OnLevelLoadedEventArgs e) {
-        if (scheduleRoutine != null) {
-            StopCoroutine(scheduleRoutine);
-        }
-        
         currentGhostMode = GhostMode.Scatter;
-        scheduleRoutine = StartCoroutine(ScheduleRoutine());
+        isFrightened = false;
+        phaseIndex = 0;
+        phaseTimeLeft = ghostModeTimingSO.GetPhaseCount() > 0 ? ghostModeTimingSO.GetPhaseDuration(0) : 0f;
+        isRunning = true;
     }
 
-    private IEnumerator ScheduleRoutine() {
-        for (int i = 0; i < ghostModeTimingSO.GetPhaseCount(); i++) {
-            SetMode(i % 2 == 0 ? GhostMode.Scatter : GhostMode.Chase);
+    private void LevelManager_OnLevelCompleted(object sender, LevelManager.OnLevelCompletedEventArgs e) {
+        isRunning = false;
+    }
 
-            yield return new WaitForSeconds(ghostModeTimingSO.GetPhaseDuration(i));
+    private void Pellet_OnAnyPowerPelletEaten(object sender, EventArgs e) {
+        if (!isRunning) return;
+
+        float duration = GameManager.Instance.GetCurrentTier().GetFrightenedDuration();
+        if (duration <= 0f) return;
+
+        isFrightened = true;
+        frightenedTimeLeft = duration;
+        OnFrightenedStarted?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void Update() {
+        if (!isRunning) return;
+
+        if (isFrightened) {
+            frightenedTimeLeft -= Time.deltaTime;
+
+            if (frightenedTimeLeft <= 0f) {
+                EndFrightened();
+            }
+
+            return;
         }
 
-        SetMode(GhostMode.Chase);
+        AdvanceScatterChaseClock();
     }
-    
+
+    private void AdvanceScatterChaseClock() {
+        int phaseCount = ghostModeTimingSO.GetPhaseCount();
+        if (phaseIndex >= phaseCount) return;
+
+        phaseTimeLeft -= Time.deltaTime;
+        if (phaseTimeLeft > 0f) return;
+
+        phaseIndex++;
+
+        if (phaseIndex >= phaseCount) {
+            SetMode(GhostMode.Chase);
+            return;
+        }
+
+        phaseTimeLeft = ghostModeTimingSO.GetPhaseDuration(phaseIndex);
+        SetMode(phaseIndex % 2 == 0 ? GhostMode.Scatter : GhostMode.Chase);
+    }
+
+    private void EndFrightened() {
+        isFrightened = false;
+        OnFrightenedEnded?.Invoke(this, EventArgs.Empty);
+    }
+
     private void SetMode(GhostMode mode) {
         if (currentGhostMode == mode) return;
 
@@ -78,5 +132,13 @@ public class GhostModeScheduler : MonoBehaviour {
 
     public GhostMode GetCurrentMode() {
         return currentGhostMode;
+    }
+
+    public bool IsFrightened() {
+        return isFrightened;
+    }
+
+    public float GetFrightenedTimeLeft() {
+        return isFrightened ? Mathf.Max(0f, frightenedTimeLeft) : 0f;
     }
 }

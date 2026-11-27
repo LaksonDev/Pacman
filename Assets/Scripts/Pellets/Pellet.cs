@@ -5,6 +5,7 @@ public class Pellet : MonoBehaviour, IEdible {
 
     public static event EventHandler OnAnyPelletSpawned;
     public static event EventHandler<OnAnyPelletEatenEventArgs> OnAnyPelletEaten;
+    public static event EventHandler OnAnyPowerPelletEaten;
     public sealed class OnAnyPelletEatenEventArgs : EventArgs {
         private readonly PelletSO pelletSO;
 
@@ -20,11 +21,12 @@ public class Pellet : MonoBehaviour, IEdible {
     [SerializeField] private PelletSO pelletSO;
 
     private bool isEaten;
-    
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStaticData() {
         OnAnyPelletSpawned = null;
         OnAnyPelletEaten = null;
+        OnAnyPowerPelletEaten = null;
     }
 
     private void Start() {
@@ -34,8 +36,12 @@ public class Pellet : MonoBehaviour, IEdible {
     public void Eat() {
         if (isEaten) return;
         isEaten = true;
-        
+
         Destroy(gameObject);
         OnAnyPelletEaten?.Invoke(this, new OnAnyPelletEatenEventArgs(pelletSO));
+
+        if (pelletSO.IsPowerPellet()) {
+            OnAnyPowerPelletEaten?.Invoke(this, EventArgs.Empty);
+        }
     }
 }

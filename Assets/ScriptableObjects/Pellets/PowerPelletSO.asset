@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: PowerPelletSO
   m_EditorClassIdentifier: Assembly-CSharp::PelletSO
   points: 50
+  isPowerPellet: 1
