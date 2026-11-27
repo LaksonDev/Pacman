@@ -42,12 +42,13 @@ public class LevelManager : MonoBehaviour {
     [SerializeField] private LevelCatalogSO levelCatalogSO;
     [SerializeField] private PelletCounter pelletCounter;
     [SerializeField, Min(0)] private int startingLevelNumber;
-    [SerializeField, Min(0.1f)] private float levelCompleteDelay = 2f;
+    
 
     private Level currentLevel;
     private int currentLevelNumber;
     private bool isTransitioning;
-    private float roundRestartDelay = 1.5f;
+    private float roundRestartDelay = 3.5f;
+    private float levelCompleteDelay = 2f;
 
     private void Awake() {
         Instance = this;

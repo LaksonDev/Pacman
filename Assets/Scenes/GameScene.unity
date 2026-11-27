@@ -569,7 +569,7 @@ MonoBehaviour:
   levelCatalogSO: {fileID: 11400000, guid: 05c7266d8b803d342974ea97cc341b0a, type: 2}
   pelletCounter: {fileID: 1897873979}
   startingLevelNumber: 0
-  levelCompleteDelay: 2
+  levelCompleteDelay: 3.5
 --- !u!4 &386652043
 Transform:
   m_ObjectHideFlags: 0
