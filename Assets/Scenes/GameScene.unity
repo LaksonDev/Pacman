@@ -569,7 +569,6 @@ MonoBehaviour:
   levelCatalogSO: {fileID: 11400000, guid: 05c7266d8b803d342974ea97cc341b0a, type: 2}
   pelletCounter: {fileID: 1897873979}
   startingLevelNumber: 0
-  levelCompleteDelay: 3.5
 --- !u!4 &386652043
 Transform:
   m_ObjectHideFlags: 0
@@ -756,7 +755,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -140, y: -45}
+  m_AnchoredPosition: {x: -140, y: -60}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &596427701
@@ -893,7 +892,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -170, y: -15}
+  m_AnchoredPosition: {x: -170, y: -30}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &611684142
