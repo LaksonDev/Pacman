@@ -9,6 +9,7 @@ public class Player : MonoBehaviour, ITeleportable {
 
     public event EventHandler OnLifeLost;
     public event EventHandler OnGameOver;
+    public event EventHandler OnDeathAnimationStarted;
 
     private const float PLAYER_DEFAULT_FACING_ANGLE = 0f;
     private const float CELL_SIZE = 1f;
@@ -20,6 +21,7 @@ public class Player : MonoBehaviour, ITeleportable {
     [SerializeField] private float movementSpeed = 15f;
     [SerializeField] private PlayerInput playerInput;
     [SerializeField] private LayerMask obstaclesLayerMask;
+    [SerializeField, Min(0f)] private float deathFreezeSeconds = 1f;
 
     private Vector2 currentDirection;
     private Vector2 queuedDirection;
@@ -61,7 +63,14 @@ public class Player : MonoBehaviour, ITeleportable {
         isMovementLocked = true;
         SetWalking(false);
 
+        StartCoroutine(DeathSequenceRoutine());
         LoseLife();
+    }
+
+    private IEnumerator DeathSequenceRoutine() {
+        yield return new WaitForSeconds(deathFreezeSeconds);
+
+        OnDeathAnimationStarted?.Invoke(this, EventArgs.Empty);
     }
 
     private void LoseLife() {
