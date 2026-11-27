@@ -24,6 +24,7 @@ public class GhostVisual : MonoBehaviour {
     
     private SpriteRenderer bodyRenderer;
     private Color normalBodyColor;
+    private bool isHiddenForDeath;
 
     private void Awake() {
         bodyRenderer = GetComponent<SpriteRenderer>();
@@ -34,6 +35,7 @@ public class GhostVisual : MonoBehaviour {
         ghost.OnDirectionChanged += Ghost_OnDirectionChanged;
         ghost.OnFrightenedChanged += Ghost_OnFrightenedChanged;
         ghost.OnEatenChanged += Ghost_OnEatenChanged;
+        LevelManager.Instance.OnLevelLoaded += LevelManager_OnLevelLoaded;
 
         RefreshAppearance();
         UpdateEyes();
@@ -43,10 +45,34 @@ public class GhostVisual : MonoBehaviour {
         ghost.OnDirectionChanged -= Ghost_OnDirectionChanged;
         ghost.OnFrightenedChanged -= Ghost_OnFrightenedChanged;
         ghost.OnEatenChanged -= Ghost_OnEatenChanged;
+        
+        if (LevelManager.Instance != null) {
+            LevelManager.Instance.OnLevelLoaded -= LevelManager_OnLevelLoaded;
+        }
+    }
+    
+    private void Start() {
+        Player.Instance.OnDeathAnimationStarted += Player_OnDeathAnimationStarted;
+    }
+
+    private void OnDestroy() {
+        if (Player.Instance != null) {
+            Player.Instance.OnDeathAnimationStarted -= Player_OnDeathAnimationStarted;
+        }
     }
 
     private void Update() {
         UpdateBodySprite();
+    }
+    
+    private void Player_OnDeathAnimationStarted(object sender, EventArgs e) {
+        isHiddenForDeath = true;
+        RefreshAppearance();
+    }
+
+    private void LevelManager_OnLevelLoaded(object sender, LevelManager.OnLevelLoadedEventArgs e) {
+        isHiddenForDeath = false;
+        RefreshAppearance();
     }
     
     private void Ghost_OnEatenChanged(object sender, EventArgs e) {
@@ -67,8 +93,8 @@ public class GhostVisual : MonoBehaviour {
         bool isEaten = ghost.IsEaten();
         bool isFrightened = ghost.IsFrightened();
 
-        bodyRenderer.enabled = !isEaten;
-        eyesRenderer.enabled = isEaten || !isFrightened;
+        bodyRenderer.enabled = !isEaten && !isHiddenForDeath;
+        eyesRenderer.enabled = !isHiddenForDeath && (isEaten || !isFrightened);
         bodyRenderer.color = isFrightened ? Color.white : normalBodyColor;
 
         if (isEaten) return;
